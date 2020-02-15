@@ -18,6 +18,4 @@ from Fenetre import Fenetre
 # cv2.destroyAllWindows()
 
 fenetre = Fenetre()
-while True:
-    fenetre.root.update_idletasks()
-    fenetre.root.update()
+fenetre.root.mainloop()

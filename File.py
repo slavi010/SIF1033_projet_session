@@ -12,4 +12,4 @@ class File:
 
     @staticmethod
     def get_image(root):
-        return File.get_file(root, [("PNG", "*.png"), ("JPEG", "*.jpg")], "Choisissez une image").name
+        return File.get_file(root, [("TOUTES LES IMAGES", ""), ("PNG", "*.png"), ("JPEG", "*.jpg")], "Choisissez une image").name
