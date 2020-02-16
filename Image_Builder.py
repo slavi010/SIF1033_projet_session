@@ -23,7 +23,7 @@ class Image_Builder:
         self.image = cv2.bitwise_and(self.image, self.image, mask=mask)
         return self
 
-    def extract_contours(self, value=10):
+    def extract_contours(self, value=10, min_area=1000):
         ret, thresh = cv2.threshold(cv2.cvtColor(self.image.copy(),
                                                  cv2.COLOR_BGR2GRAY),
                                     value,
@@ -31,23 +31,23 @@ class Image_Builder:
                                     cv2.THRESH_BINARY)
         self.contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_TC89_KCOS)
         self.contours = sorted(self.contours, key=cv2.contourArea, reverse=True)
+        for i in range(len(self.contours)):
+            if cv2.contourArea(self.contours[i]) < min_area:
+                self.contours = self.contours[:i]
+                break
+        return self
+
+    def filter_contours_polygon(self, peak=4):
+        result = []
+        for i in range(len(self.contours)):
+            if len(self.contours[i]) == peak:
+                result.append(self.contours[i])
+        self.contours = result
         return self
 
     def extract_contour(self, position=0):
         if self.contours is not None and len(self.contours) > position:
             self.contour = self.contours[position]
-        return self
-
-    def extract_contour_polygon(self, position=0, peak=4):
-        self.contour = None
-        cursor_position = 0
-        for c in self.contours:
-            if len(c) == peak:
-                if cursor_position == position:
-                    self.contour = c
-                    break
-                else:
-                    cursor_position += 1
         return self
 
     def extract_inside_contour_from_contour(self):
@@ -61,10 +61,6 @@ class Image_Builder:
                         minmax_current[1] > minmax_temp[1] and \
                         minmax_current[2] < minmax_temp[2] and \
                         minmax_current[3] > minmax_temp[3]:
-                    print minmax_current
-                    print minmax_temp
-                    print self.contour
-                    print c
                     self.contour = c
                     return self
         self.contour = None
@@ -97,9 +93,14 @@ class Image_Builder:
             self.contours[i] = lambda_exp(self, self.contours[i])
         return self
 
-    def draw_contours(self, color=(0, 255, 0)):
+    def draw_contours(self, color=(0, 255, 0), image=None):
         if self.contours is not None:
-            cv2.drawContours(self.image, self.contours, -1, color, 3)
+            if image is not None:
+                self.image = cv2.drawContours(image, self.contours, -1, color, 3)
+            else:
+                cv2.drawContours(self.image, self.contours, -1, color, 3)
+        if image is not None:
+            self.image = image
         return self
 
     def draw_contour(self, color=(0, 255, 0), image=None):
@@ -108,6 +109,8 @@ class Image_Builder:
                 self.image = cv2.drawContours(image, self.contour, -1, color, 3)
             else:
                 cv2.drawContours(self.image, self.contour, -1, color, 3)
+        if image is not None:
+            self.image = image
         return self
 
     def add_image(self, image):

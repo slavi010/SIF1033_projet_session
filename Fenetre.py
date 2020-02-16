@@ -20,15 +20,14 @@ from matplotlib.figure import Figure
 
 
 # root.mainloop()
+from Menu import Menu
+
 
 class Fenetre:
 
     def __init__(self):
         # fenetre de l'image
         self.root = tk.Tk()
-
-        # fenetre des slider
-        self.root_slider = tk.Tk()
 
         # canvas de l'image
         self.canvas_image_WIDTH = 1280
@@ -42,55 +41,8 @@ class Fenetre:
 
         self.image = Image_canvas(self.canvas_image)
 
-        # FigureCanvasTkAgg()
-
-        # barre de menu
-        self.init_menubar()
-        self.isContourActivated = False
-
-        # slider
-        self.nb_slider = 0
-        # color HSV lower and upper
-        self.slider_h1 = self.init_slider(108, label="Min H")
-        self.slider_s1 = self.init_slider(38, label="Min S")
-        self.slider_v1 = self.init_slider(0, label="Min V")
-        self.slider_h2 = self.init_slider(133, label="Max H")
-        self.slider_s2 = self.init_slider(225, label="Max S")
-        self.slider_v2 = self.init_slider(255, label="Max V")
-        # contours
-        self.slider_contour = self.init_slider(25, label="Contour")
-        self.slider_contour_precision = self.init_slider(45, min=0, max=1000, label="Contour precision")
-        self.slider_peak = self.init_slider(4, min=0, max=20, label="Nombre de sommet")
-        self.slider_position = self.init_slider(0, min=0, max=10, label="Position")
-        self.slider_mode_affichage = self.init_slider(0, min=0, max=2, label="Mode d'affichage")
-
-    def init_menubar(self):
-        # toplevel menu
-        menubar = tk.Menu(self.root)
-
-        # fichier sous-menu
-        fichier_menu = tk.Menu(self.root, tearoff=0)
-        # ouvrir une image
-        fichier_menu.add_command(label="Ouvrir une image", command=self.show_image)
-        menubar.add_cascade(label="Fichier", menu=fichier_menu)
-
-        # image sous-menu
-        image_menu = tk.Menu(self.root, tearoff=0)
-        # contour de l'image
-        image_menu.add_command(label="Contour de l'image", command=self.menu_contour)
-        menubar.add_cascade(label="Outils", menu=image_menu)
-
-        # display the menu
-        self.root.config(menu=menubar)
-
-    def init_slider(self, default=100, min=0, max=255, label=""):
-        w = tk.Scale(self.root_slider, from_=min, to=max, orient=tk.HORIZONTAL, length=300)
-        lbl = tk.Label(self.root_slider , text=label)
-        lbl.grid(row=self.nb_slider, column=0)
-        w.grid(row=self.nb_slider, column=1)
-        w.set(default)
-        self.nb_slider += 1
-        return w
+        # menu && slider
+        self.menu = Menu(self)
 
     def show_image(self, image_path=None, camera=False):
         cap = None
@@ -109,7 +61,7 @@ class Fenetre:
 
             self.image.resize(self.canvas_image_WIDTH, self.canvas_image_HEIGHT)
 
-            if self.isContourActivated:
+            if self.menu.outils_contour:
                 self.traitement_image()
 
             # update image
@@ -119,32 +71,30 @@ class Fenetre:
             self.canvas_image.update()
             sleep(0.01)
 
-    def menu_contour(self):
-        self.isContourActivated = not self.isContourActivated
-        if self.image.image_cv2 is not None:
-            self.traitement_image()
-
     def traitement_image(self):
         # colors
-        min_color = (self.slider_h1.get(),
-                     self.slider_s1.get(),
-                     self.slider_v1.get())
-        max_color = (self.slider_h2.get(),
-                     self.slider_s2.get(),
-                     self.slider_v2.get())
-
         image_colorless = Image_Builder(self.image.image_cv2) \
-            .extract_image_range_color(min_color, max_color) \
+            .extract_image_range_color(self.menu.slider_get_min_color(),
+                                       self.menu.slider_get_max_color()) \
             .image
 
-        image_contours = Image_Builder(image_colorless) \
-            .extract_contours(self.slider_contour.get()) \
+        image_contours_raw = Image_Builder(self.image.image_cv2.copy()) \
+            .extract_contours(self.menu.slider_contour.get()) \
+            .draw_contours(image=Image_Builder(image_colorless, image_type="black").image) \
+            .image
+
+        # logo losange rouge
+        image_contours_approximate_rouge = Image_Builder(self.image.image_cv2) \
+            .extract_image_range_color((self.menu.slider_get_min_color()),
+                                       self.menu.slider_get_max_color()) \
+            .extract_contours(self.menu.slider_contour.get()) \
             .approximate_contours(lambda image_builder, contour:
                                   image_builder.approximate_contour_polygon_pointes(
-                                      self.slider_contour_precision.get(),
+                                      self.menu.slider_contour_precision.get(),
                                       contour,
                                       return_contour=True)) \
-            .extract_contour_polygon(position=self.slider_position.get(), peak=self.slider_peak.get()) \
+            .filter_contours_polygon(peak=self.menu.slider_peak.get()) \
+            .extract_contour(position=self.menu.slider_position.get()) \
             .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
             .draw_contour_line(color=(0, 0, 255)) \
             .extract_inside_contour_from_contour() \
@@ -152,17 +102,37 @@ class Fenetre:
             .draw_contour_line(color=(0, 255, 0)) \
             .image
 
+        # logo carré orange
+        image_contours_approximate_orange = Image_Builder(self.image.image_cv2) \
+            .extract_image_range_color((96, 185, 110),
+                                       (114, 255, 255)) \
+            .extract_contours(50) \
+            .approximate_contours(lambda image_builder, contour:
+                                  image_builder.approximate_contour_polygon_pointes(
+                                      70,
+                                      contour,
+                                      return_contour=True)) \
+            .filter_contours_polygon(peak=4) \
+            .extract_contour(position=self.menu.slider_position.get()) \
+            .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
+            .draw_contour_line(color=(0, 0, 255)) \
+            .image
+
+        image_contours_approximate = cv2.add(image_contours_approximate_rouge, image_contours_approximate_orange)
+
         # mode d'affichage
-        mode = self.slider_mode_affichage.get()
+        mode = self.menu.slider_mode_affichage.get()
         if mode == 0:
             # affichage image brut + contours
             self.image.image_cv2 = Image_Builder(self.image.image_cv2) \
-                .add_image(image_contours).image
+                .add_image(image_contours_approximate).image
         elif mode == 1:
             # affichage objet + contours
             self.image.image_cv2 = Image_Builder(image_colorless) \
-                .add_image(image_contours).image
-        else:
+                .add_image(image_contours_approximate).image
+        elif mode == 2:
             # affichage contours
-            self.image.image_cv2 = image_contours
-
+            self.image.image_cv2 = image_contours_approximate
+        else:
+            # affichage des contours bruts
+            self.image.image_cv2 = image_contours_raw
