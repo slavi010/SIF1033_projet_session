@@ -28,7 +28,7 @@ class Image_canvas:
         height, width, no_channels = self.start_image_cv2.shape
 
         if new_width is None:
-            new_width = (new_height/height) * width
+            new_width = int((new_height/(1.0 * height)) * width)
 
         self.image_cv2 = cv2.resize(self.start_image_cv2, (new_width, new_height))
         self.start_image_cv2 = self.image_cv2

@@ -46,21 +46,25 @@ class Fenetre:
 
     def show_image(self, image_path=None, camera=False):
         cap = None
+        image_imread = None
 
         if camera:
             cap = cv2.VideoCapture(0)
 
         while True:
             if cap is not None:
+                # camera
                 ret, frame = cap.read()
                 self.image.set_image(frame)
             else:
+                # image from file
                 if image_path is None:
                     image_path = File.get_image(self.root)
-                self.image.set_image(cv2.imread(image_path))
+                if image_imread is None:
+                    image_imread = cv2.imread(image_path)
+                self.image.set_image(image_imread.copy())
 
             self.image.resize(self.canvas_image_HEIGHT)
-
 
             self.traitement_image()
 
@@ -78,19 +82,16 @@ class Fenetre:
                                        self.menu.slider_get_max_color()) \
             .image
 
-        image_contours_raw = Image_Builder(self.image.image_cv2.copy()) \
+        image_contours_raw = Image_Builder(image_colorless.copy()) \
             .extract_contours(self.menu.slider.get("s_thresh").get()) \
             .draw_contours(image=Image_Builder(image_colorless, image_type="black").image) \
             .image
-
 
         ib_result = Image_Builder(self.image.image_cv2, image_type="black")
 
         if self.menu.show_image == 0:
             # logo losange rouge
-            image_contours_approximate_rouge = Image_Builder(self.image.image_cv2) \
-                .extract_image_range_color((self.menu.slider_get_min_color()),
-                                           self.menu.slider_get_max_color()) \
+            image_contours_approximate_rouge = Image_Builder(image_colorless) \
                 .extract_contours(self.menu.slider.get("s_thresh").get()) \
                 .approximate_contours(lambda image_builder, contour:
                                       image_builder.approximate_contour_polygon_pointes(
@@ -108,16 +109,14 @@ class Fenetre:
             ib_result.add_image(image_contours_approximate_rouge)
         else:
             # logo carré orange
-            image_contours_approximate_orange = Image_Builder(self.image.image_cv2) \
-                .extract_image_range_color((96, 185, 110),
-                                           (114, 255, 255)) \
-                .extract_contours(50) \
+            image_contours_approximate_orange = Image_Builder(image_colorless) \
+                .extract_contours(self.menu.slider.get("s_thresh").get()) \
                 .approximate_contours(lambda image_builder, contour:
                                       image_builder.approximate_contour_polygon_pointes(
-                                          70,
+                                          self.menu.slider.get("s_precision").get(),
                                           contour,
                                           return_contour=True)) \
-                .filter_contours_polygon(peak=4) \
+                .filter_contours_polygon(peak=self.menu.slider.get("s_peak").get()) \
                 .extract_contour(position=self.menu.slider.get("s_position").get()) \
                 .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
                 .draw_contour_line(color=(0, 0, 255)) \
@@ -127,10 +126,8 @@ class Fenetre:
 
         image_contours_approximate = ib_result.image
 
-        print "test"
         # mode d'affichage
         mode = self.menu.mode
-        print mode
         if mode == 0:
             # affichage image brut + contours
             self.image.image_cv2 = Image_Builder(self.image.image_cv2) \
@@ -142,6 +139,10 @@ class Fenetre:
         elif mode == 2:
             # affichage contours
             self.image.image_cv2 = image_contours_approximate
+        elif mode == 3:
+            # affichage objet + ROI
+            self.image.image_cv2 = Image_Builder(image_colorless) \
+                .add_image(image_contours_raw).image
         else:
-            # affichage des contours bruts
+            # affichage ROI
             self.image.image_cv2 = image_contours_raw

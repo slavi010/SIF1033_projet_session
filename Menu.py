@@ -34,10 +34,10 @@ class Menu:
 
         self.slider = {
             # color HSV lower and upper
-            "s_h1": self.init_slider(108, label=self.labels.get("s_h1")),
-            "s_s1": self.init_slider(38, label=self.labels.get("s_s1")),
+            "s_h1": self.init_slider(0, label=self.labels.get("s_h1")),
+            "s_s1": self.init_slider(0, label=self.labels.get("s_s1")),
             "s_v1": self.init_slider(0, label=self.labels.get("s_v1")),
-            "s_h2": self.init_slider(133, label=self.labels.get("s_h2")),
+            "s_h2": self.init_slider(255, label=self.labels.get("s_h2")),
             "s_s2": self.init_slider(255, label=self.labels.get("s_s2")),
             "s_v2": self.init_slider(255, label=self.labels.get("s_v2")),
             # contours
@@ -52,6 +52,7 @@ class Menu:
         self.show_image = 0
 
         self.callback_affichage(0)
+        self.callback_image(0)
 
 
 
@@ -61,6 +62,8 @@ class Menu:
 
         # fichier sous-menu
         fichier_menu = tk.Menu(self.fenetre.root, tearoff=0)
+        # ouvre l'image de test
+        fichier_menu.add_command(label="Ouvrir l'image de test", command=lambda : self.callback_open_image(image_path='./image/image_produits_toxiques.jpg'))
         # ouvrir une image
         fichier_menu.add_command(label="Ouvrir une image", command=self.callback_open_image)
         # ouvrir flux video
@@ -72,14 +75,15 @@ class Menu:
         image_menu.add_command(label="Image originale + contours", command=lambda: self.callback_affichage(0))
         image_menu.add_command(label="Image partielle + contours", command=lambda: self.callback_affichage(1))
         image_menu.add_command(label="Contours", command=lambda: self.callback_affichage(2))
-        image_menu.add_command(label="ROI", command=lambda: self.callback_affichage(3))
+        image_menu.add_command(label="Image partielle + ROI", command=lambda: self.callback_affichage(3))
+        image_menu.add_command(label="ROI", command=lambda: self.callback_affichage(4))
         menubar.add_cascade(label="Affichage", menu=image_menu)
 
-        # image sous-menu
+        # Objet sous-menu
         image_menu = tk.Menu(self.fenetre.root, tearoff=0)
-        image_menu.add_command(label="Personalise", command=lambda: self.callback_image(0))
-        image_menu.add_command(label="Orange", command=lambda: self.callback_image(1))
-        menubar.add_cascade(label="Image", menu=image_menu)
+        image_menu.add_command(label="Double losange rouge", command=lambda: self.callback_image(0))
+        image_menu.add_command(label="Rectangle orange", command=lambda: self.callback_image(1))
+        menubar.add_cascade(label="Objet", menu=image_menu)
 
         # display the menu
         self.fenetre.root.config(menu=menubar)
@@ -107,6 +111,12 @@ class Menu:
         for s in self.slider.values():
             self.slider_enable(s)
 
+    def slider_set(self, values=None):
+        if values is None:
+            values = {}
+        for key in values.keys():
+            self.slider.get(key).set(values.get(key))
+
     # min HSV
     def slider_get_min_color(self):
         return (self.slider.get("s_h1").get(),
@@ -119,8 +129,8 @@ class Menu:
                 self.slider.get("s_s2").get(),
                 self.slider.get("s_v2").get())
 
-    def callback_open_image(self):
-        self.fenetre.show_image()
+    def callback_open_image(self, image_path=None):
+        self.fenetre.show_image(image_path=image_path)
 
     def callback_video(self):
         self.fenetre.show_image(camera=True)
@@ -128,11 +138,41 @@ class Menu:
     def callback_affichage(self, mode=0):
         self.mode = mode
 
-        if mode == 3:
-            self.slider_disable_all()
-            self.slider_enable(self.slider.get("s_thresh"))
+        if mode == 3 or mode == 4:
+            self.slider_enable_all()
+            self.slider_disable(self.slider.get("s_precision"))
+            self.slider_disable(self.slider.get("s_peak"))
+            self.slider_disable(self.slider.get("s_position"))
+
         else:
             self.slider_enable_all()
 
     def callback_image(self, mode):
         self.show_image = mode
+
+        if mode == 0:
+            self.slider_set({
+                "s_h1": 108,
+                "s_s1": 38,
+                "s_v1": 0,
+                "s_h2": 133,
+                "s_s2": 255,
+                "s_v2": 255,
+                "s_thresh": 25,
+                "s_precision": 45,
+                "s_peak": 4,
+                "s_position": 0,
+            })
+        else:
+            self.slider_set({
+                "s_h1": 96,
+                "s_s1": 185,
+                "s_v1": 110,
+                "s_h2": 114,
+                "s_s2": 255,
+                "s_v2": 255,
+                "s_thresh": 50,
+                "s_precision": 70,
+                "s_peak": 4,
+                "s_position": 0,
+            })
