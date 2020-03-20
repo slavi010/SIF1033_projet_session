@@ -153,3 +153,22 @@ class Image_Builder:
                     cv2.line(image, (contour[i][0][0], contour[i][0][1]),
                              (contour[j][0][0], contour[j][0][1]), color, lineThickness)
         return self
+
+    def set_image(self, image):
+        if image is not None:
+            self.image = image
+        return self
+
+    def set_contours(self, contours):
+        self.contours = contours
+        return self
+
+    def set_contour(self, contour):
+        self.contour = contour
+        return self
+
+    def if_do(self, lamda_condition=None, lamda_do=None):
+        if lamda_do is not None and lamda_condition is not None:
+            if (lamda_condition(self)):
+                lamda_do(self)
+        return self

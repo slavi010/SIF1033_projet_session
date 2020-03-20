@@ -44,7 +44,7 @@ class Menu:
             "s_thresh": self.init_slider(25, label=self.labels.get("s_thresh")),
             "s_precision": self.init_slider(45, min=0, max=1000, label=self.labels.get("s_precision")),
             "s_peak": self.init_slider(4, min=0, max=20, label=self.labels.get("s_peak")),
-            "s_position": self.init_slider(0, min=0, max=10, label=self.labels.get("s_position")),
+            "s_position": self.init_slider(0, min=0, max=20, label=self.labels.get("s_position")),
         }
 
         # mode d'affichage
@@ -153,7 +153,7 @@ class Menu:
         if mode == 0:
             self.slider_set({
                 "s_h1": 108,
-                "s_s1": 38,
+                "s_s1": 24,
                 "s_v1": 0,
                 "s_h2": 133,
                 "s_s2": 255,

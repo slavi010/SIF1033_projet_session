@@ -1,13 +1,13 @@
 # SIF1033 Projet de session
 
-Github : `https://github.com/slavi010/SIF1033_projet_session/`
+Github : https://github.com/slavi010/SIF1033_projet_session/
 
 ## Prérequis : 
  - Python 2.7
  - pip
    - Tkinter
    - tkFileDialog
-   - cv2
+   - cv2 (opencv-python)
    - PIL
    - numpy
 
