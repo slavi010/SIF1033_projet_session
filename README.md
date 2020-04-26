@@ -10,6 +10,14 @@ Github : https://github.com/slavi010/SIF1033_projet_session/
    - cv2 (opencv-python)
    - PIL
    - numpy
+   
+Commandes :
+ - `pip install pillow`
+ - `pip install numpy`
+ - `pip install opencv-python`
+   
+
+
 
 ## Lancer
 Dans la racine du projet lancez la commande : `python main.py`

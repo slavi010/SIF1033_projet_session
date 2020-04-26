@@ -12,11 +12,6 @@ from Image_canvas import Image_canvas
 
 from time import sleep
 
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
-# Implement the default Matplotlib key bindings.
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.figure import Figure
 
 # root.mainloop()
 from Menu import Menu
