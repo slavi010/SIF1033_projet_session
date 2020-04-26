@@ -140,6 +140,8 @@ class Fenetre:
                         .extract_contour(position=position) \
                         .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
                         .draw_contour_line(color=(0, 0, 255)) \
+                        .if_do((lambda this, kwarg: this.contour is not None),  # si double losange
+                               (lambda this, kwarg: this.add_number(kwarg[0], 1)), nb_pictogrammes) # ajoute un au pictogramme
                         .image
                 )
 
