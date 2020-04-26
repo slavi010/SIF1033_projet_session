@@ -88,23 +88,10 @@ class Fenetre:
 
         ib_result = Image_Builder(self.image.image_cv2, image_type="black")
 
+        nb_pictogrammes = [0]
+
         if self.menu.show_image == 0:
             # logo losange rouge
-
-            # ib = Image_Builder(image_colorless) \
-            #     .extract_contours(self.menu.slider.get("s_thresh").get()) \
-            #     .approximate_contours(lambda image_builder, contour:
-            #                           image_builder.approximate_contour_polygon_pointes(
-            #                               self.menu.slider.get("s_precision").get(),
-            #                               contour,
-            #                               return_contour=True)) \
-            #     .filter_contours_polygon(peak=self.menu.slider.get("s_peak").get()) \
-            #     .extract_contour(position=self.menu.slider.get("s_position").get()) \
-            #     .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
-            #     .draw_contour_line(color=(0, 0, 255)) \
-            #     .extract_inside_contour_from_contour() \
-            #     .draw_contour(color=(0, 255, 0)) \
-            #     .draw_contour_line(color=(0, 255, 0))
             ib_contours = Image_Builder(image_colorless) \
                 .extract_contours(self.menu.slider.get("s_thresh").get()) \
                 .approximate_contours(lambda image_builder, contour:
@@ -120,21 +107,23 @@ class Fenetre:
                         .set_contours(ib_contours.contours) \
                         .extract_contour(position=position) \
                         .extract_inside_contour_from_contour() \
-                        .if_do((lambda this: this.contour is not None),  # si double losange
-                               (lambda this:  # alors on déssine les losanges
+                        .if_do((lambda this, kwarg: this.contour is not None),  # si double losange
+                               (lambda this, kwarg:  # alors on déssine les losanges
                                 this.draw_contour(color=(0, 255, 0))
                                 .draw_contour_line(color=(0, 255, 0))
                                 .extract_contour(position=position)
                                 .draw_contour(color=(0, 0, 255))
                                 .draw_contour_line(color=(0, 0, 255))
                                 ))
+                        .if_do((lambda this, kwarg: this.contour is not None),  # si double losange
+                               (lambda this, kwarg: this.add_number(kwarg[0], 1)), nb_pictogrammes) # ajoute un au pictogramme
                         .image
                 )
 
             ib_result.add_image(ib_contours.image)
         else:
             # logo carré orange
-            image_contours_approximate_orange = Image_Builder(image_colorless) \
+            ib_contours = Image_Builder(image_colorless) \
                 .extract_contours(self.menu.slider.get("s_thresh").get()) \
                 .approximate_contours(lambda image_builder, contour:
                                       image_builder.approximate_contour_polygon_pointes(
@@ -142,14 +131,23 @@ class Fenetre:
                                           contour,
                                           return_contour=True)) \
                 .filter_contours_polygon(peak=self.menu.slider.get("s_peak").get()) \
-                .extract_contour(position=self.menu.slider.get("s_position").get()) \
-                .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
-                .draw_contour_line(color=(0, 0, 255)) \
-                .image
+                .set_image(Image_Builder(image_colorless, image_type="black").image)
+            for position in range(30):
+                ib_contours.add_image(
+                    Image_Builder(Image_Builder(image_colorless, image_type="black").image) \
+                        .set_contours(ib_contours.contours) \
+                        .delete_all_inside_contour()
+                        .extract_contour(position=position) \
+                        .draw_contour(color=(0, 0, 255), image=Image_Builder(image_colorless, image_type="black").image) \
+                        .draw_contour_line(color=(0, 0, 255)) \
+                        .image
+                )
 
-            ib_result.add_image(image_contours_approximate_orange)
+            ib_result.add_image(ib_contours.image)
 
         image_contours_approximate = ib_result.image
+
+        self.menu.set_number_result(nb_pictogrammes[0])
 
         # mode d'affichage
         mode = self.menu.mode

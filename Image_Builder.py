@@ -1,3 +1,4 @@
+# coding=utf-8
 import cv2
 import numpy as np
 
@@ -13,6 +14,7 @@ class Image_Builder:
         self.contour = None
 
     def extract_image_range_color(self, min_color=(0, 0, 0), max_color=(255, 255, 255)):
+        """ Filtre les couleurs dans l'image par une intervalle donnée (HSV) """
         # couleurs en HSV
         mask = cv2.inRange(cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV), min_color, max_color)
         mask = cv2.erode(mask, None, iterations=2)
@@ -21,6 +23,7 @@ class Image_Builder:
         return self
 
     def extract_contours(self, value=10, min_area=1000):
+        """ Extrait les contours de l'image avec la fonction 'findContours' """
         ret, thresh = cv2.threshold(cv2.cvtColor(self.image.copy(),
                                                  cv2.COLOR_BGR2GRAY),
                                     value,
@@ -35,6 +38,7 @@ class Image_Builder:
         return self
 
     def filter_contours_polygon(self, peak=4):
+        """ Filtre les contours pour garder seuelement ceux avec un nombre de points définis """
         result = []
         for i in range(len(self.contours)):
             if len(self.contours[i]) == peak:
@@ -43,8 +47,28 @@ class Image_Builder:
         return self
 
     def extract_contour(self, position=0):
+        """ Selection un contour parmis les contours """
         if self.contours is not None and len(self.contours) > position:
             self.contour = self.contours[position]
+        else:
+            self.contour = None
+        return self
+
+    def delete_all_inside_contour(self):
+        for big_contour in self.contours:
+            minmax_current = self.get_min_max_xy_from_contour(big_contour)
+
+            for idx in range(len(self.contours)):
+                minmax_temp = self.get_min_max_xy_from_contour(self.contours[idx])
+                if minmax_current[0] < minmax_temp[0] and \
+                        minmax_current[1] > minmax_temp[1] and \
+                        minmax_current[2] < minmax_temp[2] and \
+                        minmax_current[3] > minmax_temp[3]:
+                    # print "avant" + str(self.contours)
+                    self.contours = np.delete(self.contours, idx, 0)
+                    # print "apres" + str(self.contours)
+                idx -= 1
+
         return self
 
     def extract_inside_contour_from_contour(self):
@@ -167,8 +191,12 @@ class Image_Builder:
         self.contour = contour
         return self
 
-    def if_do(self, lamda_condition=None, lamda_do=None):
+    def if_do(self, lamda_condition=None, lamda_do=None, *kwarg):
         if lamda_do is not None and lamda_condition is not None:
-            if (lamda_condition(self)):
-                lamda_do(self)
+            if lamda_condition(self, kwarg):
+                lamda_do(self, kwarg)
+        return self
+
+    def add_number(self, a, b):
+        a[0] += b
         return self

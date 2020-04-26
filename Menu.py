@@ -13,7 +13,6 @@ class Menu:
             "s_thresh": "Contour thresh",
             "s_precision": "Precision",
             "s_peak": "Nombre de sommet",
-            "s_position": "Position",
             "m_mode": "Mode d'affichage",
             "m_file": "Fichier",
             "m_oimg": "Ouvrir une image",
@@ -26,6 +25,7 @@ class Menu:
         self.root_slider = tk.Tk()
 
         # barre de menu
+        self.menubar = tk.Menu(self.fenetre.root)
         self.init_menubar()
         self.outils_contour = False
 
@@ -44,7 +44,6 @@ class Menu:
             "s_thresh": self.init_slider(25, label=self.labels.get("s_thresh")),
             "s_precision": self.init_slider(45, min=0, max=1000, label=self.labels.get("s_precision")),
             "s_peak": self.init_slider(4, min=0, max=20, label=self.labels.get("s_peak")),
-            "s_position": self.init_slider(0, min=0, max=20, label=self.labels.get("s_position")),
         }
 
         # mode d'affichage
@@ -58,7 +57,6 @@ class Menu:
 
     def init_menubar(self):
         # toplevel menu
-        menubar = tk.Menu(self.fenetre.root)
 
         # fichier sous-menu
         fichier_menu = tk.Menu(self.fenetre.root, tearoff=0)
@@ -68,7 +66,7 @@ class Menu:
         fichier_menu.add_command(label="Ouvrir une image", command=self.callback_open_image)
         # ouvrir flux video
         fichier_menu.add_command(label="Ouvrir la camera", command=self.callback_video)
-        menubar.add_cascade(label="Fichier", menu=fichier_menu)
+        self.menubar.add_cascade(label="Fichier", menu=fichier_menu)
 
         # affichage sous-menu
         image_menu = tk.Menu(self.fenetre.root, tearoff=0)
@@ -77,16 +75,20 @@ class Menu:
         image_menu.add_command(label="Contours", command=lambda: self.callback_affichage(2))
         image_menu.add_command(label="Image partielle + ROI", command=lambda: self.callback_affichage(3))
         image_menu.add_command(label="ROI", command=lambda: self.callback_affichage(4))
-        menubar.add_cascade(label="Affichage", menu=image_menu)
+        self.menubar.add_cascade(label="Affichage", menu=image_menu)
 
         # Objet sous-menu
-        image_menu = tk.Menu(self.fenetre.root, tearoff=0)
-        image_menu.add_command(label="Double losange rouge", command=lambda: self.callback_image(0))
-        image_menu.add_command(label="Rectangle orange", command=lambda: self.callback_image(1))
-        menubar.add_cascade(label="Objet", menu=image_menu)
+        objet_menu = tk.Menu(self.fenetre.root, tearoff=0)
+        objet_menu.add_command(label="Double losange rouge", command=lambda: self.callback_image(0))
+        objet_menu.add_command(label="Rectangle orange", command=lambda: self.callback_image(1))
+        self.menubar.add_cascade(label="Objet", menu=objet_menu)
 
-        # display the menu
-        self.fenetre.root.config(menu=menubar)
+        result_menu = tk.Menu(self.fenetre.root, tearoff=0)
+        self.menubar.add_cascade(label="Nombre de pictogrammes : 0", menu=result_menu)
+
+
+    # display the menu
+        self.fenetre.root.config(menu=self.menubar)
 
     def init_slider(self, default=100, min=0, max=255, label=""):
         w = tk.Scale(self.root_slider, from_=min, to=max, orient=tk.HORIZONTAL, length=300)
@@ -153,15 +155,14 @@ class Menu:
         if mode == 0:
             self.slider_set({
                 "s_h1": 108,
-                "s_s1": 24,
+                "s_s1": 35,
                 "s_v1": 0,
-                "s_h2": 133,
+                "s_h2": 145,
                 "s_s2": 255,
                 "s_v2": 255,
                 "s_thresh": 25,
                 "s_precision": 45,
                 "s_peak": 4,
-                "s_position": 0,
             })
         else:
             self.slider_set({
@@ -174,5 +175,10 @@ class Menu:
                 "s_thresh": 50,
                 "s_precision": 70,
                 "s_peak": 4,
-                "s_position": 0,
             })
+
+    def set_number_result(self, number):
+        if number > 0:
+            self.menubar.entryconfigure(4, label="/!\\ Nombre de pictogrammes :  " + str(number) + " /!\\")
+        else:
+            self.menubar.entryconfigure(4, label="Aucun pictogramme visible")
