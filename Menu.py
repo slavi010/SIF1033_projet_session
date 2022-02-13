@@ -11,11 +11,11 @@ class Menu:
             "s_s2": "Max S",
             "s_v2": "Max V",
             "s_thresh": "Contour thresh",
-            "s_precision": "Precision",
-            "s_peak": "Nombre de sommet",
-            "m_mode": "Mode d'affichage",
-            "m_file": "Fichier",
-            "m_oimg": "Ouvrir une image",
+            "s_precision": "Accuracy",
+            "s_peak": "Number of peak",
+            "m_mode": "View mode",
+            "m_file": "File",
+            "m_oimg": "Open an image",
         }
 
 
@@ -61,30 +61,30 @@ class Menu:
         # fichier sous-menu
         fichier_menu = tk.Menu(self.fenetre.root, tearoff=0)
         # ouvre l'image de test
-        fichier_menu.add_command(label="Ouvrir l'image de test", command=lambda : self.callback_open_image(image_path='./image/image_produits_toxiques.jpg'))
+        fichier_menu.add_command(label="Open the sample image", command=lambda : self.callback_open_image(image_path='./image/image_produits_toxiques.jpg'))
         # ouvrir une image
-        fichier_menu.add_command(label="Ouvrir une image", command=self.callback_open_image)
+        fichier_menu.add_command(label="Open an image", command=self.callback_open_image)
         # ouvrir flux video
-        fichier_menu.add_command(label="Ouvrir la camera", command=self.callback_video)
-        self.menubar.add_cascade(label="Fichier", menu=fichier_menu)
+        fichier_menu.add_command(label="Open the cam", command=self.callback_video)
+        self.menubar.add_cascade(label="File", menu=fichier_menu)
 
         # affichage sous-menu
         image_menu = tk.Menu(self.fenetre.root, tearoff=0)
-        image_menu.add_command(label="Image originale + contours", command=lambda: self.callback_affichage(0))
-        image_menu.add_command(label="Image partielle + contours", command=lambda: self.callback_affichage(1))
+        image_menu.add_command(label="Original image + contours", command=lambda: self.callback_affichage(0))
+        image_menu.add_command(label="partial image + contours", command=lambda: self.callback_affichage(1))
         image_menu.add_command(label="Contours", command=lambda: self.callback_affichage(2))
-        image_menu.add_command(label="Image partielle + ROI", command=lambda: self.callback_affichage(3))
+        image_menu.add_command(label="Partial image + ROI", command=lambda: self.callback_affichage(3))
         image_menu.add_command(label="ROI", command=lambda: self.callback_affichage(4))
-        self.menubar.add_cascade(label="Affichage", menu=image_menu)
+        self.menubar.add_cascade(label="View", menu=image_menu)
 
         # Objet sous-menu
         objet_menu = tk.Menu(self.fenetre.root, tearoff=0)
-        objet_menu.add_command(label="Double losange rouge", command=lambda: self.callback_image(0))
-        objet_menu.add_command(label="Rectangle orange", command=lambda: self.callback_image(1))
-        self.menubar.add_cascade(label="Objet", menu=objet_menu)
+        objet_menu.add_command(label="Actual version (red diamond)", command=lambda: self.callback_image(0))
+        objet_menu.add_command(label="Older version (square orange)", command=lambda: self.callback_image(1))
+        self.menubar.add_cascade(label="Type of pictograms", menu=objet_menu)
 
         result_menu = tk.Menu(self.fenetre.root, tearoff=0)
-        self.menubar.add_cascade(label="Nombre de pictogrammes : 0", menu=result_menu)
+        self.menubar.add_cascade(label="Number of detected pictograms : 0", menu=result_menu)
 
 
     # display the menu
@@ -179,6 +179,6 @@ class Menu:
 
     def set_number_result(self, number):
         if number > 0:
-            self.menubar.entryconfigure(4, label="/!\\ Nombre de pictogrammes :  " + str(number) + " /!\\")
+            self.menubar.entryconfigure(4, label="/!\\ Number of detected pictograms : " + str(number) + " /!\\")
         else:
-            self.menubar.entryconfigure(4, label="Aucun pictogramme visible")
+            self.menubar.entryconfigure(4, label="No detected pictogram")
